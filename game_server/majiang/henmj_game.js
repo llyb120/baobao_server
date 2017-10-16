@@ -1087,8 +1087,8 @@ class HENMJGame extends GameBase {
                 from: this._lastChair
             });
 
-            if (this.checkPengGang(chairId) !== false || this.checkAnGang(chairId) !== false) {
-                this._actions[chairId] = {
+            if (this.checkPengGang(cid) !== false || this.checkAnGang(cid) !== false) {
+                this._actions[cid] = {
                     peng: 0,
                     gang: 1,
                     hu: 0,
