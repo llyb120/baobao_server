@@ -1,0 +1,16 @@
+module.exports = {
+    TYPE_NULL : 0,
+    TYPE_DANZHANG : 1,
+    TYPE_DUIZI : 2,
+    TYPE_SANDAIER : 3,
+    TYPE_SANDAIYIDUI : 4,
+    TYPE_DANSHUN : 5,
+    TYPE_SHUANGSHUN : 6,
+    TYPE_ZHADAN : 7,
+    TYPE_SANDAIYI : 8,
+    TYPE_FEIJI : 9,
+
+    SCORE_ZHADAN : 10,
+    SCORE_BASE : 1,
+    SCORE_CHUNTIAN : 20,
+};

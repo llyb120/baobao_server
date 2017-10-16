@@ -1,0 +1,35 @@
+{
+  "name": "nwgame_server",
+  "version": "0.0.1",
+  "description": "no",
+  "main": "main.js",
+  "dependencies": {
+    "@types/express": "^4.0.37",
+    "@types/ioredis": "^0.0.26",
+    "@types/locutus": "^0.0.5",
+    "@types/node": "^8.0.34",
+    "@types/uuid": "^3.4.2",
+    "chokidar": "^1.7.0",
+    "express": "^4.15.2",
+    "ioredis": "^3.1.4",
+    "locutus": "^2.0.9",
+    "mysql": "^2.13.0",
+    "socket.io": "^1.7.3",
+    "socket.io-client": "^1.7.3",
+    "ts-node": "^3.3.0",
+    "uuid": "^3.1.0",
+    "ws": "^3.0.0",
+    "x-engine": "llyb120/x-engine",
+    "x-orm": "llyb120/x-orm"
+  },
+  "devDependencies": {
+    "should": "^11.2.1",
+    "supertest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "mocha",
+    "ts": "node tools/dev.js"
+  },
+  "author": "Bin",
+  "license": "ISC"
+}
