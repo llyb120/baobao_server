@@ -1261,13 +1261,25 @@ class HENMJGame extends GameBase {
         else {
             var magic = this._magic;
         }
+
+        //4个直接胡
+        if(this._handCardsMap[chairId][magic] >= 4){
+            return true;
+        }
+        //3个以上必须自模胡
         //持有魔术牌的时候只能自摸胡
-        if(this._handCardsMap[chairId][magic] > 0){
+        if(this._handCardsMap[chairId][magic] > 3){
         	if(!this.isHisTurn(chairId)){
         		return false;
         	}
         }
-
+        //1-2个看情况自模胡
+        if(this._handCardsMap[chairId][magic] <= 2 && this._handCardsMap[chairId][magic] > 0){
+            //强制自摸的情况
+            if(this._roomInfo.gameConfig.forceZimo && !this.isHisTurn(chairId)){
+                return false;
+            }
+        }
 
         var holds = Object.assign([], this._handCards[chairId]);
         var map = Object.assign({}, this._handCardsMap[chairId]);
