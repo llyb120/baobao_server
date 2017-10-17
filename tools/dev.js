@@ -1,5 +1,5 @@
 let tsnode = require('ts-node');
-let watch = require('watch');
+// let watch = require('watch');
 const child_process = require('child_process');
 let path = require('path');
 let child;
@@ -22,7 +22,8 @@ chokidar.watch(path.resolve(__dirname, '../x-blade'), {
         child = child_process.spawn("node", ["./node_modules/ts-node/dist/bin.js", "./x-blade/app.ts"]);
         child.stdout.on("data", (data) => {
             console.log(data.toString())
-        })
+        });
+        child.stderr.on("data",data => console.log(data.toString()));
     }, 0);
     //   console.log(event, path);
 });

@@ -3,11 +3,13 @@ import * as Redis from 'ioredis';
 
 export class RedisService {
     private redis : Redis.Redis;
-    private sub : Redis.Redis;
+    public sub : Redis.Redis;
+    public pub : Redis.Redis;
 
     constructor() {
         this.redis = new Redis;
         this.sub = new Redis;
+        this.pub = new Redis;
         
         this.sub.on("message",(...args : any[]) => {
             console.log("123312");
