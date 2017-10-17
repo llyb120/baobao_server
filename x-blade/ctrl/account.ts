@@ -86,11 +86,15 @@ export class AccountController {
             while(true){
                 roomId = rand(100000,999999);
                 //如果已经存在，那么继续
-                if(await redisService.get("user_in_room" + token)){
+                if(await redisService.get("user_in_room:" + token)){
                     continue
                 }
                 break;
             }
+            
+            //验证人数
+            const playerCount = gameConfig.playercount || 0;
+             
             
             // redisService.set("user_in_room" + token,)
             // let room = redisService.get("lk_")

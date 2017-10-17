@@ -168,7 +168,7 @@ class GameBase{
         //     return;
         // }
         this._userInfo[chairId] = userInfo;
-        this._ready[chairId] = 'ready';
+        this._ready[chairId] = 'free';
         // this._userInfo.push(userInfo);
         // this._ready.push("ready");
         // this._gameScore.push(0);
@@ -182,7 +182,7 @@ class GameBase{
                 chairId : chairId
                 ,
                 userInfo : userInfo,
-                ready: 'ready'
+                ready: 'free'
             });
             //this.pushState(c);
             //this.pushUsers(c);

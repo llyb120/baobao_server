@@ -47,14 +47,14 @@ var io;
  * @param userId
  * @returns {*}
  */
-function getUserInRoom(Games,userId) {
-    for(var i = 0; i < Games.rooms.length; i++){
+function getUserInRoom(Games, userId) {
+    for (var i = 0; i < Games.rooms.length; i++) {
         var index = -1;
-        if((index = Games.rooms[i].players.indexOf(userId)) > -1){
-            return [i,index];
+        if ((index = Games.rooms[i].players.indexOf(userId)) > -1) {
+            return [i, index];
         }
     }
-    return [0,0];
+    return [0, 0];
 }
 
 /**
@@ -70,57 +70,61 @@ function getGameInfo(socketId) {
 
 exports.start = () => {
 
-    const wss = new WebSocket.Server({port : config.SERVER.port});
+    const wss = new WebSocket.Server({
+        port: config.SERVER.port
+    });
     wss.on('connection', function connection(ws) {
 
         var enterRoom = async function (data) {
             var token = data.token,
                 roomId = data.roomId;
             var games = global.Games;
-            if(!token){
+            if (!token) {
                 return;
             }
             var userInfo = await utils.getUserInfoByToken(token);
-            if(!userInfo || !userInfo.length){
+            if (!userInfo || !userInfo.length) {
                 return;
             }
             userInfo = userInfo[0];
-            if(!games.rooms[roomId]){
+            if (!games.rooms[roomId]) {
                 return;
             }
 
             var index = games.rooms[roomId].players.indexOf(userInfo.id);
 
             //已经进入 需要同步
-            if(index > -1){
+            if (index > -1) {
                 games.rooms[roomId].sockets[index] = ws;
                 var controller = games.rooms[roomId].controller;
-                if(controller._state == 'free'){
-                    games.rooms[roomId].controller._ready[index] = 'ready';
-                    controller.sendToRoom('user_ready_push',{chairId:index});
-                    if(controller._ready.filter(function (item) {
-                            return item == 'ready'
-                        }).length == controller._roomInfo.gameConfig.playerCount){
-                        controller.start();
-                    }
-                    else{
-                        games.rooms[roomId].controller.sync(index);
-                    }
-                }
-                else{
-                    games.rooms[roomId].controller.sync(index);
-                }
+                games.rooms[roomId].controller.sync(index);
+
+                // if(controller._state == 'free'){
+                //     games.rooms[roomId].controller._ready[index] = 'ready';
+                //     controller.sendToRoom('user_ready_push',{chairId:index});
+                //     if(controller._ready.filter(function (item) {
+                //             return item == 'ready'
+                //         }).length == controller._roomInfo.gameConfig.playerCount){
+                //         controller.start();
+                //     }
+                //     else{
+                //         games.rooms[roomId].controller.sync(index);
+                //     }
+                // }
+                // else{
+                //     games.rooms[roomId].controller.sync(index);
+                // }
             }
             //第一次进入
-            else{
+            else {
                 var index = -1;
-                for(var i = 0; i < games.rooms[roomId].players.length; i++){
-                    if(games.rooms[roomId].players[i] === null){
+                for (var i = 0; i < games.rooms[roomId].players.length; i++) {
+                    if (games.rooms[roomId].players[i] === null) {
                         index = i;
                         break;
                     }
                 }
-                if(index == -1) index = games.rooms[roomId].players.length;
+                if (index == -1) index = games.rooms[roomId].players.length;
                 games.rooms[roomId].players[index] = userInfo.id;
                 games.rooms[roomId].sockets[index] = ws;
 
@@ -129,7 +133,7 @@ exports.start = () => {
                 // games.players[userInfo.id] = {
                 //     controller : games.rooms[roomId].controller
                 // }
-                games.rooms[roomId].controller.onUserEnter(index,userInfo);
+                games.rooms[roomId].controller.onUserEnter(index, userInfo);
                 // games.rooms[roomId].controller.sendToRoom("enter_success_push",{
                 //     roomInfo : games.rooms[roomId].roomInfo,
                 //     chairId : games.rooms[roomId].players.length - 1
@@ -137,62 +141,72 @@ exports.start = () => {
                 // socket.emit("enter_success_push",{
                 //
                 // });
-                var roomInfo = games.rooms[roomId].roomInfo;
-                if(games.rooms[roomId].players.filter(function (item) {
-                        return item !== null;
-                    }).length == roomInfo.gameConfig.playerCount){
-                    var gameMgr = games.rooms[roomId].controller;
-                    gameMgr.start();
-                }
+                // var roomInfo = games.rooms[roomId].roomInfo;
+                // if (games.rooms[roomId].players.filter(function (item) {
+                //         return item !== null;
+                //     }).length == roomInfo.gameConfig.playerCount) {
+                //     var gameMgr = games.rooms[roomId].controller;
+                //     gameMgr.start();
+                // }
             }
         };
 
         ws.on('message', function incoming(message) {
             var data = JSON.parse(message);
-            if(!data.event){
+            if (!data.event) {
                 return;
             }
             var _data = data.data || {};
-            if(!_data.roomId){
+            if (!_data.roomId) {
                 return;
             }
             var room = global.Games.rooms[_data.roomId];
-            if(!room){
+            if (!room) {
                 ws.send(JSON.stringify({
-                    event : "error_room_push"
+                    event: "error_room_push"
                 }))
                 return;
             }
             //用户进入房间的特殊事件
-            if(data.event == 'enter_room_pull'){
+            if (data.event == 'enter_room_pull') {
                 return enterRoom(_data);
-            }
-            else if(data.event == 'dismiss_room_pull'){
+            } else if (data.event === 'ready_pull') {
+                let games = global.Games;
+                let chairId = room.sockets.indexOf(ws);
+                let controller = room.controller;
+                if(chairId === -1) return;
+                games.rooms[_data.roomId].controller._ready[chairId] = 'ready';
+                controller.sendToRoom('user_ready_push', {
+                    chairId
+                });
+                if (controller._ready.filter(function (item) {
+                        return item == 'ready'
+                    }).length == controller._roomInfo.gameConfig.playerCount) {
+                    controller.start();
+                }
+            } else if (data.event == 'dismiss_room_pull') {
                 var chairId = room.sockets.indexOf(ws);
-                if(!room.controller._isBegin){
-                    if(chairId == 0){
+                if (!room.controller._isBegin) {
+                    if (chairId == 0) {
                         room.controller.sendToRoom("dismiss_room_success_push");
                         room.controller.forceDismissRoom();
-                    }
-                    else if(chairId > -1){
+                    } else if (chairId > -1) {
                         room.controller.onUserExit(chairId);
-                        room.controller.sendToChair(chairId,"dismiss_room_success_push");
+                        room.controller.sendToChair(chairId, "dismiss_room_success_push");
                         room.sockets[chairId] = null;
                         room.players[chairId] = null;
 
                     }
-                }
-                else{
-                    if(chairId > -1){
-                        room.controller.onDismissRoom(chairId,_data.agree);
+                } else {
+                    if (chairId > -1) {
+                        room.controller.onDismissRoom(chairId, _data.agree);
                     }
                 }
-            }
-            else if(data.event == 'chat_msg_pull'){
+            } else if (data.event == 'chat_msg_pull') {
                 var chairId = room.sockets.indexOf(ws);
-                if(chairId > -1){
+                if (chairId > -1) {
                     _data.chairId = chairId;
-                    room.controller.sendToRoom("chat_msg_push",_data);
+                    room.controller.sendToRoom("chat_msg_push", _data);
                 }
             }
             // else if(data.event == 'ready_pull'){
@@ -200,10 +214,10 @@ exports.start = () => {
             // }
 
             var socketIndex = room.sockets.indexOf(ws);
-            if(socketIndex == -1){
+            if (socketIndex == -1) {
                 return;
             }
-            room.controller.onMessage(socketIndex,data.event,_data);
+            room.controller.onMessage(socketIndex, data.event, _data);
         });
 
     });
@@ -405,6 +419,3 @@ exports.start = () => {
     //
     // console.log(`gameServer is listening on ${config.SERVER.server}:${config.SERVER.port}`)
 };
-
-
-
