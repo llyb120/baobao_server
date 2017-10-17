@@ -588,18 +588,18 @@ class HENMJGame extends GameBase {
 
         var card = this._cards.pop();
         //如果是花牌
-        // if(card >= 34){
-        //     this._hua[chairId].push(card);
-        //     this.sendToRoom("hua_mopai_push",{
-        //         chairId : chairId,
-        //         card :card
-        //     });
+        if(card >= 34){
+            this._hua[chairId].push(card);
+            this.sendToRoom("hua_mopai_push",{
+                chairId : chairId,
+                card :card
+            });
         //     // this.record("hua_mopai_push", {
         //     //     chairId: chairId,
         //     //     card: card
         //     // }); 
-        //     return this.mopai(chairId.checkAnGang,isSend);
-        // }
+            return this.mopai(chairId,checkAnGang,isSend);
+        }
 
         this._handCards[chairId].push(card);
         this._handCardsMap[chairId][card]++;
@@ -1150,9 +1150,9 @@ class HENMJGame extends GameBase {
 
         //追加花牌
         //34 - 41
-        // for(let i = 0; i < 8; i++){
-        //     this._cards.push(i + 34);
-        // }
+        for(let i = 0; i < 8; i++){
+            this._cards.push(i + 34);
+        }
 
         //红中玩法需要加入红中
         //红中是31

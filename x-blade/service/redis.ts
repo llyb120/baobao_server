@@ -11,6 +11,9 @@ export class RedisService {
         this.sub = new Redis;
         this.pub = new Redis;
         
+        /**
+         * sub只接受游戏事件的转发
+         */
         this.sub.on("message",(...args : any[]) => {
             console.log("123312");
             console.log(args);
@@ -41,7 +44,7 @@ export class RedisService {
     async get(key: string) {
         try {
             let ret = await this.redis.get(key);
-            if (ret[0] == '{' || ret[0] == '[') {
+            if (ret && ret[0] == '{' || ret[0] == '[') {
                 return JSON.parse(ret);
             }
             else {

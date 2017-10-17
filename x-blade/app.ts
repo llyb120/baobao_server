@@ -4,6 +4,7 @@ import * as http from 'http';
 import { HTTP_PORT, DATABASE } from './config';
 import { X } from 'x-orm';
 import { AccountController } from './ctrl/account';
+import { GameGateController } from './ctrl/gate';
 
 let app = express();
 let server = http.createServer(app);
@@ -12,6 +13,8 @@ let server = http.createServer(app);
  * 注册控制器START
  */
 AccountController;
+GameGateController;
+
 /**
  * 注册控制器END
  */

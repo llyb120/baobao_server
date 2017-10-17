@@ -23,6 +23,7 @@ chokidar.watch(path.resolve(__dirname, '../x-blade'), {
         child.stdout.on("data", (data) => {
             console.log(data.toString())
         });
+        child.stdout.on("error",err => console.error(err.message));
         child.stderr.on("data",data => console.log(data.toString()));
     }, 0);
     //   console.log(event, path);
