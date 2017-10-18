@@ -117,10 +117,10 @@ export class AccountController {
                 gameType : gameConfig.gameType,
                 players : [user.id]
             };
-            redisService.set("user_in_room:" + user.id,roomId);
+            await redisService.set("user_in_room:" + user.id,roomId);
             // console.log(roomInfo);
             // console.log(JSON.stringify(roomInfo));
-            redisService.set("room:" + roomId,roomInfo);
+            await redisService.set("room:" + roomId,roomInfo);
 
             //注册监听器
             redisService.sub.subscribe("room:" + roomId);
@@ -177,7 +177,7 @@ export class AccountController {
             //加入房间
             roomInfo.players.push(user.id);
             await redisService.setWithLock("room:" + roomId,roomInfo);
-            redisService.set("user_in_room:" + user.id,roomId);
+            await redisService.set("user_in_room:" + user.id,roomId);
             return success(roomInfo);
 
         }
@@ -185,6 +185,33 @@ export class AccountController {
             console.log(e);
             return failed("解析失败");
         }
+    }
+
+
+    /**
+     * 检查用户是否在房间内，用于断线重连
+     */
+    async checkInGame(token){
+        if(!token){
+            return failed("no token")
+        }
+        let user = await X.of(User).findOne({
+            where : {
+                token
+            }
+        });
+        if(!user){
+            return failed("no user");
+        }
+        let roomNum = await redisService.get("user_in_room:" + user.id);
+        if(!roomNum){
+            return failed("no roomId");
+        }
+        let roomInfo = await redisService.get("room:" + roomNum);
+        if(!roomInfo){
+            return failed("no roomInfo");
+        }
+        return success(roomInfo);
     }
 
 

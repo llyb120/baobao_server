@@ -47,8 +47,19 @@ describe("hall test",() => {
         };
         let res = await request.get("/api/joinRoom?option=" + urlencode(JSON.stringify((option))));
         let json = JSON.parse((res.text)); 
-        console.log(res.text);
+        // json.errcode.should
+        should.equal(json.errcode,0);
     });
+
+
+    it("test check room",async() => {
+        let res = await request.get("/api/checkInGame?token=" + token).expect(200);
+        let json = JSON.parse(res.text);
+        // console.log(json);
+        should.equal(json.errcode,0);
+        // json.errcode.should.eql(0);
+
+    })
 
 
 })
