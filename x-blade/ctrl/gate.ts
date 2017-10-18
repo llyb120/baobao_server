@@ -4,8 +4,9 @@ import { User } from '../ml/user';
 import * as WebSocket from 'ws';
 import { X } from 'x-orm';
 import { redisService } from '../service/redis';
+import { userService } from '../service/user_manager';
 
-let SocketMap = new WeakMap<WebSocket, User>();
+let SocketMap = new WeakMap<WebSocket, number>();
 
 @V.Controller({
     type: Connection.WebSocket,
@@ -32,7 +33,8 @@ export class GameGateController {
             //如果在这个服务器并且通过了校验，那么不再重新取用户信息
             let user: User;
             if (SocketMap.has(ws)) {
-                user = SocketMap.get(ws);
+                let uid = SocketMap.get(ws);
+                user = userService.getUser(uid);
             }
             //没有通过校验的，必须使用令牌来进行校验
             else if (_data.token) {
@@ -44,13 +46,17 @@ export class GameGateController {
                 if (!user) {
                     return;
                 }
-                SocketMap.set(ws, user);
+                SocketMap.set(ws, user.id);
+                userService.setUser(user.id,user);
             }
             else {
                 return;
             }
 
             switch (data.event) {
+                case 'register_token_pull':
+                    return;
+
                 //还没有绑定任何逻辑控制器的时候，处理用户的注册事件
                 case 'enter_room_pull':
                     //查找当前用户所在位置
