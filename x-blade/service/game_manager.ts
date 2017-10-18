@@ -1,3 +1,5 @@
+import { redisService } from './redis';
+import { userService } from './user_manager';
 
 let SDGame = require('../../game_server/majiang/henmj_game');
 
@@ -32,13 +34,21 @@ class GameManager{
             controller : controller,
             roomInfo : roomInfo
         }
+        controller._data.roomId = roomInfo.roomId;
 
         this.games[roomInfo.roomId] = controller;
+        this.games[roomInfo.roomId].redisService = redisService;
+        controller.userService = userService;
+
+        redisService.sub.subscribe("game_controller:" + roomInfo.roomId);
     }
 
     hasGame(roomId : number){
         return this.games[roomId];
     }
+
+
+    
 
 }
 export const gameManagerService = new GameManager;

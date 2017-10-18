@@ -2,6 +2,7 @@ import * as supertest from 'supertest';
 import * as should from "should";
 import { app } from '../app';
 import { urlencode } from 'locutus/php/url';
+import * as WebSocket from 'ws';
 
 const request = supertest(app);
 
@@ -58,6 +59,20 @@ describe("hall test",() => {
         // console.log(json);
         should.equal(json.errcode,0);
         // json.errcode.should.eql(0);
+
+    });
+
+
+    it("tst rpc",async() => {
+        let ws=  new WebSocket("ws://127.0.0.1:9016/game");
+        ws.onopen = () => {
+            ws.send(JSON.stringify({
+                event : "enter_room_pull",
+                data : {
+                    token : token
+                } 
+            })) ;  
+        }
 
     })
 

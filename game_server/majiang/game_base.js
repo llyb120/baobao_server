@@ -23,6 +23,13 @@ class GameBase{
             record : [],
         };
 
+        this._data = {
+            ready : [],
+            roomId : -1
+        };
+        this.redisService = null;
+        this.userService = null;
+
         // this._game = global.Games.rooms[roomInfo.roomId];
         // this.reset();
     }
@@ -103,6 +110,10 @@ class GameBase{
 
     }
 
+    sendToUser(uid,action,data = null){
+
+    }
+
 
     onMessage(chairId,event,data){
 
@@ -160,8 +171,31 @@ class GameBase{
         db.query(sql);
     }
 
+    /**
+     * RPC用户进入
+     */
+    async onUserEnter(userId){
+        console.log('user enter');
+        let roomInfo = await this.redisService.get("room:" + this._data.roomId);
+        let index = roomInfo.players.indexOf(userId);
+        if(index === -1){
+            return;
+        }
+        if(!this._ready[index]){
+            this._ready[index] = 'free';
+        }
+        this.sync(index);
+        //通知用户进入
+        roomInfo.players.forEach((uid,c) => {
+            this.sendToUser(uid,"user_enter_push",{
+                chairId : index,
+                // ready : 'free'
+            });
+        });
 
+    }
 
+    /** 
     onUserEnter(chairId,userInfo){
         // var userInfo = await db.query("select * from user where id = " + userId);
         // if(!userInfo || !userInfo.length){
@@ -190,7 +224,7 @@ class GameBase{
         }.bind(this));
 
     }
-
+    **/
     onUserExit(chairId){
         this._userInfo.forEach(function (u,c) {
             if(u === null) return;
