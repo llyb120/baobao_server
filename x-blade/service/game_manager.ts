@@ -34,7 +34,7 @@ class GameManager{
             controller : controller,
             roomInfo : roomInfo
         }
-        controller._data.roomId = roomInfo.roomId;
+        controller.data.roomId = roomInfo.roomId;
 
         this.games[roomInfo.roomId] = controller;
         this.games[roomInfo.roomId].redisService = redisService;
