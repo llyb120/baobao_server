@@ -5,7 +5,9 @@ export interface IRoomInfo{
     roomId : number;
     creator : number;
     gameServer?;
-    gameConfig : any;
+    gameConfig : {
+        playerCount? : number
+    };
     gameType : string;
     players : number[];
 }
@@ -14,7 +16,7 @@ export interface IRoomInfo{
 class GameManager{
     private games : {
         [roomid : number] : any
-    };
+    } = {};
 
     addNewGame(gameType:string,roomInfo : IRoomInfo){
         let controller;

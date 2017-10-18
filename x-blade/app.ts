@@ -6,7 +6,9 @@ import { X } from 'x-orm';
 import { AccountController } from './ctrl/account';
 import { GameGateController } from './ctrl/gate';
 
-let app = express();
+// let app = express();
+export let app = express();
+
 let server = http.createServer(app);
 
 /**

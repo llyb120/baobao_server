@@ -79,7 +79,7 @@ export class AccountController {
             }
             //查找房间
             //如果用户已经在房间里，禁止他再创建房间
-            let room = await redisService.get("user_in_room:" + token);
+            let room = await redisService.get("user_in_room:" + user.id);
             let roomInfo : IRoomInfo;
             if (room && (roomInfo = await redisService.get("room:" + room))) {
                 return success(roomInfo);
@@ -117,7 +117,7 @@ export class AccountController {
                 gameType : gameConfig.gameType,
                 players : [user.id]
             };
-            redisService.set("user_in_room:" + user.token,roomId);
+            redisService.set("user_in_room:" + user.id,roomId);
             // console.log(roomInfo);
             // console.log(JSON.stringify(roomInfo));
             redisService.set("room:" + roomId,roomInfo);
@@ -154,13 +154,35 @@ export class AccountController {
                 }
             }) ;
             if(!user){
-                return failed();
+                return failed("用户不存在");
             }
-            
-            
+            //检查用户是否在房间内
+            let roomInfo : IRoomInfo;
+            let roomNum = await redisService.get("user_in_room:" + user.id);
+            if(roomNum){
+                roomInfo = await redisService.get("room:" + roomNum);
+                if(roomInfo){
+                    return success(roomInfo);
+                }
+            }
+            roomInfo = await redisService.get("room:" + roomId);
+            if(!roomInfo){
+                return failed("游戏房间不存在");
+            }
+            //检查游戏人数
+            if(roomInfo.players.length + 1 > roomInfo.gameConfig.playerCount){
+                return failed("游戏人数已满");
+            }
+
+            //加入房间
+            roomInfo.players.push(user.id);
+            await redisService.setWithLock("room:" + roomId,roomInfo);
+            redisService.set("user_in_room:" + user.id,roomId);
+            return success(roomInfo);
 
         }
         catch(e){
+            console.log(e);
             return failed("解析失败");
         }
     }

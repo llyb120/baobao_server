@@ -9,6 +9,7 @@
     "@types/locutus": "^0.0.5",
     "@types/mocha": "^2.2.43",
     "@types/node": "^8.0.34",
+    "@types/redlock": "^3.0.1",
     "@types/should": "^11.2.0",
     "@types/supertest": "^2.0.3",
     "@types/uuid": "^3.4.2",
@@ -19,6 +20,7 @@
     "locutus": "^2.0.9",
     "mocha": "^4.0.1",
     "mysql": "^2.13.0",
+    "redlock": "^3.1.0",
     "should": "^11.2.1",
     "socket.io": "^1.7.3",
     "socket.io-client": "^1.7.3",
@@ -34,7 +36,7 @@
     "supertest": "^3.0.0"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "./node_modules/.bin/mocha -r ./node_modules/ts-node/register  x-blade/test/*.ts --watch --watch-extensions ts ",
     "ts": "node tools/dev.js"
   },
   "author": "Bin",

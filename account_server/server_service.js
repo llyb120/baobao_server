@@ -251,6 +251,7 @@ exports.getServerByUserId = (userId) => {
 
 
 exports.start = () => {
+    if(Math.random() < 1) return;
     io = socketio.listen(config.HALL_SERVER_SOCKET.port);
     io.on("connection",(socket) => {
         socket.on("registerServer",(data) => registerServer(socket,data));
