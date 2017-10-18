@@ -144,8 +144,16 @@ class GameBase {
 
     }
 
-    sendToUser(uid, action, data = null) {
+    sendToUser(uid, event, data = null) {
+        try{
+            let sendData = JSON.stringify({
+                event,data
+            });
+            
 
+        }catch(e){
+
+        }
     }
 
 
