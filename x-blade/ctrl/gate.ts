@@ -6,6 +6,7 @@ import { X } from 'x-orm';
 import { redisService } from '../service/redis';
 import { userService } from '../service/user_manager';
 import { SERVER_ID } from '../config';
+import { sleep } from '../utils';
 
 let SocketMap = new WeakMap<WebSocket, number>();
 
@@ -133,22 +134,21 @@ export class GameGateController {
                 if (roomInfo) {
                     let key = "game_controlrer_in_server:" + roomId;
                     //争抢线程，最终只有一个可以成功
-                    redisService.redis.watch(key);
-                    redisService.redis.multi().set(key, SERVER_ID).exec(async (err, result) => {
-                        let server = await redisService.get(key);
-                        if (server === SERVER_ID) {
-                            await gameManagerService.addNewGame(roomInfo.gameType, roomInfo);
-                            game = gameManagerService.hasGame(roomId);
-                            await game[method].apply(game, args);
-                            await redisService.redis.del(key);
-                        }
-                        else {
-                            //延迟150毫秒再发送广播
-                            setTimeout(async () => {
-                                await redisService.pub.publish(pushKey,pushData);
-                            }, 150);
-                        }
-                    });
+                    // redisService.redis.watch(key);
+                    // redisService.redis.lo
+                    await redisService.redis.setnx(key, SERVER_ID);
+                    let server = await redisService.get(key);
+                    if (server === SERVER_ID) {
+                        await gameManagerService.addNewGame(roomInfo.gameType, roomInfo);
+                        game = gameManagerService.hasGame(roomId);
+                        await game[method].apply(game, args);
+                        await redisService.redis.del(key);
+                    }
+                    else {
+                        //延迟150毫秒再发送广播
+                        await sleep(150);
+                        await redisService.pub.publish(pushKey, pushData);
+                    }
                 }
             }
         }

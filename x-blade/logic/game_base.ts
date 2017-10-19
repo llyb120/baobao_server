@@ -70,7 +70,8 @@ export abstract class QGameBase{
      * 被RPC调用所触发
      */
     onRpcCall(uid : number,event : string,data?){
-        console.log("rpccall : uid ",uid,event,userService.getUserInServer(uid));
+        this.data.players.push(uid);
+        console.log("rpccall : uid ",uid,event,userService.getUserInServer(uid),this.data.players);
         this.sendToUser(uid,"pong");
     }
 } 

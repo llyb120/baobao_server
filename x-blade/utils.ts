@@ -22,3 +22,11 @@ export function failed(data : string | {} = {}){
     }
     return msg;
 }
+
+export function sleep(time){
+    return new Promise(function(resolve,reject){
+        setTimeout(function(){
+            resolve(time);
+        },time);
+    })
+}

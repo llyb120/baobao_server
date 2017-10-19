@@ -52,7 +52,7 @@ export class RedisService {
 
         this.sub.on("message",async (event :string,data) => {
             //分布式调用
-            if(/^game_controller/.test(event)){
+            if(/^game_controller:/.test(event)){
                 try{
                     let d = JSON.parse(data);
                     //存储uid
@@ -70,8 +70,7 @@ export class RedisService {
                 }
             }
             //消息推送
-            else if(/^push_client/.test(event)){
-                console.log("get push client")
+            else if(/^push_client:/.test(event)){
                 try{
                     let d = JSON.parse(data);
                     if(!d.uid){
@@ -84,7 +83,7 @@ export class RedisService {
                 } 
             }
 
-            console.log("123312");
+            // console.log("123312");
             // console.log(args);
         });
 

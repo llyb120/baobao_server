@@ -117,7 +117,7 @@ describe("hall test",() => {
         ws2.send(JSON.stringify({
             event : 'fuck2',
             data : {
-                token : token
+                token : token2
             }
         }))
 
