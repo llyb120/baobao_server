@@ -128,28 +128,26 @@ export class GameGateController {
             let pushKey = "game_controller:" + roomId,
                 pushData = JSON.stringify(option);
             let count = await redisService.pub.publish(pushKey, pushData);
+            if (count) {
+                return;
+            }
             //如果没有任何节点接受这个事件，那么自行创建该游戏
-            if (count === 0) {
-                let roomInfo: IRoomInfo = await redisService.get("room:" + roomId);
-                if (roomInfo) {
-                    let key = "game_controlrer_in_server:" + roomId;
-                    //争抢线程，最终只有一个可以成功
-                    // redisService.redis.watch(key);
-                    // redisService.redis.lo
-                    await redisService.redis.setnx(key, SERVER_ID);
-                    let server = await redisService.get(key);
-                    if (server === SERVER_ID) {
-                        await gameManagerService.addNewGame(roomInfo.gameType, roomInfo);
-                        game = gameManagerService.hasGame(roomId);
-                        await game[method].apply(game, args);
-                        await redisService.redis.del(key);
-                    }
-                    else {
-                        //延迟150毫秒再发送广播
-                        await sleep(150);
-                        await redisService.pub.publish(pushKey, pushData);
-                    }
-                }
+            let roomInfo: IRoomInfo = await redisService.get("room:" + roomId);
+            if (!roomInfo) {
+                return;
+            }
+            let key = "game_controlrer_in_server:" + roomId;
+            //争抢线程，最终只有一个可以成功
+            count = await redisService.redis.setnx(key, SERVER_ID);
+            if (count) {
+                await gameManagerService.addNewGame(roomInfo.gameType, roomInfo);
+                game = gameManagerService.hasGame(roomId);
+                await game[method].apply(game, args);
+                await redisService.redis.del(key);
+            }
+            else {
+                await sleep(150);
+                await redisService.pub.publish(pushKey, pushData);
             }
         }
 
