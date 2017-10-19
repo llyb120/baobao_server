@@ -90,16 +90,6 @@ export class RedisService {
 
         this.sub.subscribe('push_client:' + SERVER_ID);
 
-
-        try {
-            // this.redis.subscribe("cubi");
-            // this.redis.psubscribe('cubi','guichu',(err : any,count : any) => {
-
-            // });
-        }
-        catch (e) {
-            console.log(e);
-        }
     }
 
     set(key: string, val: any, expr?: number) {
