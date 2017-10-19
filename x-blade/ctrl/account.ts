@@ -7,7 +7,7 @@ import * as uuid from 'uuid';
 import { redisService } from '../service/redis';
 import { rand } from 'locutus/php/math';
 import { gameManagerService, IRoomInfo } from '../service/game_manager';
-import { SERVER_ID } from '../config';
+import { SERVER_ID, WORKER_LENGTH } from '../config';
 
 @V.Controller({
     type: Connection.HTTP,
@@ -17,7 +17,9 @@ import { SERVER_ID } from '../config';
 export class AccountController {
 
 
-    test(){
+    async test(){
+        let keys = await redisService.redis.hkeys("cubi222");
+        console.log(keys);
         console.log("access server " + SERVER_ID)
     }
     /**
@@ -84,9 +86,9 @@ export class AccountController {
             }
             //查找房间
             //如果用户已经在房间里，禁止他再创建房间
-            let room = await redisService.get("user_in_room:" + user.id);
+            let room = await redisService.get("user:in_room:" + user.id);
             let roomInfo : IRoomInfo;
-            if (room && (roomInfo = await redisService.get("room:" + room))) {
+            if (room && (roomInfo = await redisService.get("room:info:" + room))) {
                 return success(roomInfo);
             }
             let roomId;
@@ -94,7 +96,7 @@ export class AccountController {
                 // console.log("1");
                 roomId = rand(100000,999999);
                 //如果已经存在，那么继续
-                if(await redisService.get("room:" + token)){
+                if(await redisService.get("room:info:" + roomId)){
                     continue
                 }
                 break;
@@ -122,17 +124,18 @@ export class AccountController {
                 gameType : gameConfig.gameType,
                 players : [user.id]
             };
-            await redisService.set("user_in_room:" + user.id,roomId);
-            // console.log(roomInfo);
-            // console.log(JSON.stringify(roomInfo));
-            await redisService.set("room:" + roomId,roomInfo);
 
-            //注册监听器
-            // redisService.sub.subscribe("room:" + roomId);
-
-            // //启动游戏逻辑
-            // gameManagerService.addNewGame(gameConfig.gameType,roomInfo);
-
+            //创建房间的人必在0号位
+            let playerKey = "room:players:" + roomId;
+            let observeKey = "room:observers:" + roomId;
+            let ok = await redisService.redis.hsetnx(playerKey,"0",user.id);            
+            //如果这个房间曾经没有被清理
+            if(!ok){
+                await redisService.redis.del(playerKey);
+                await redisService.redis.hsetnx(playerKey,"0",user.id);
+            }
+            await redisService.set("user:in_room:" + user.id,roomId);
+            await redisService.set("room:info:" + roomId,roomInfo);
 
             return success(roomInfo);
             
@@ -163,26 +166,46 @@ export class AccountController {
             }
             //检查用户是否在房间内
             let roomInfo : IRoomInfo;
-            let roomNum = await redisService.get("user_in_room:" + user.id);
+            let roomNum = await redisService.get("user:in_room:" + user.id);
             if(roomNum){
-                roomInfo = await redisService.get("room:" + roomNum);
+                roomInfo = await redisService.get("room:info:" + roomNum);
                 if(roomInfo){
                     return success(roomInfo);
                 }
             }
-            roomInfo = await redisService.get("room:" + roomId);
+            roomInfo = await redisService.get("room:info:" + roomId);
+            console.log(roomId,roomInfo);
             if(!roomInfo){
                 return failed("游戏房间不存在");
             }
             //检查游戏人数
-            if(roomInfo.players.length + 1 > roomInfo.gameConfig.playerCount){
+            const playersKey = "room:players:" + roomId;
+            let players = await redisService.redis.hkeys(playersKey);
+            if(players.length + 1 > roomInfo.gameConfig.playerCount){
                 return failed("游戏人数已满");
             }
+            // if(roomInfo.players.length + 1 > roomInfo.gameConfig.playerCount){
+            //     return failed("游戏人数已满");
+            // }
 
             //加入房间
-            roomInfo.players.push(user.id);
-            await redisService.setWithLock("room:" + roomId,roomInfo);
-            await redisService.set("user_in_room:" + user.id,roomId);
+            //查找座位
+            let flag = false;
+            for(let i = 0; i < roomInfo.gameConfig.playerCount; i++){
+                if(!players.includes(i)){
+                    let ok = await redisService.redis.hsetnx(playersKey,i+"",user.id);
+                    if(ok){
+                        flag = true;
+                        break;
+                    }
+                }
+            }
+            if(!flag){
+                return failed("加入房间失败");
+            }
+            // roomInfo.players.push(user.id);
+            // await redisService.setWithLock("room:info:" + roomId,roomInfo);
+            await redisService.set("user:in_room:" + user.id,roomId);
             return success(roomInfo);
 
         }
@@ -208,11 +231,11 @@ export class AccountController {
         if(!user){
             return failed("no user");
         }
-        let roomNum = await redisService.get("user_in_room:" + user.id);
+        let roomNum = await redisService.get("user:in_room:" + user.id);
         if(!roomNum){
             return failed("no roomId");
         }
-        let roomInfo = await redisService.get("room:" + roomNum);
+        let roomInfo = await redisService.get("room:info:" + roomNum);
         if(!roomInfo){
             return failed("no roomInfo");
         }

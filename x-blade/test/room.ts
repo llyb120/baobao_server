@@ -34,7 +34,8 @@ describe("hall test",() => {
         let option = {
             token,
             gameConfig :{
-                gameType : "henanmajiang"
+                gameType : "henanmajiang",
+                playerCount :4
             }
         }
         let res = await fetch("http://baobao.com/api/createRoom?option=" + urlencode(JSON.stringify((option))));
@@ -49,10 +50,11 @@ describe("hall test",() => {
         let option = {
             token : token2,
             roomId,
-            gameType : "henanmajiang"
+            gameType : "henanmajiang",
         };
         let res = await fetch("http://baobao.com/api/joinRoom?option=" + urlencode(JSON.stringify((option))));
         let json = await res.json();
+        console.log(json);
         // let json = JSON.parse((res.text)); 
         // json.errcode.should
         should.equal(json.errcode,0);

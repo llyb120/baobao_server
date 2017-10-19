@@ -71,7 +71,7 @@ export class GameGateController {
             }
 
             //消息转发
-            let roomId = await redisService.get("user_in_room:" + user.id);
+            let roomId = await redisService.get("user:in_room:" + user.id);
             if (!roomId) {
                 return;
             }
@@ -132,7 +132,7 @@ export class GameGateController {
                 return;
             }
             //如果没有任何节点接受这个事件，那么自行创建该游戏
-            let roomInfo: IRoomInfo = await redisService.get("room:" + roomId);
+            let roomInfo: IRoomInfo = await redisService.get("room:info:" + roomId);
             if (!roomInfo) {
                 return;
             }

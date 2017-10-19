@@ -219,8 +219,8 @@ class GameBase extends QGameBase{
      * RPC用户进入
      */
     async onUserEnter(userId) {
-        console.log('user enter');
-        let roomInfo = await this.redisService.get("room:" + this.data.roomId);
+        // console.log('user enter');
+        let roomInfo = await this.redisService.get("room:info" + this.data.roomId);
         let index = roomInfo.players.indexOf(userId);
         if (index === -1) {
             return;
