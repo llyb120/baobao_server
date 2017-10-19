@@ -26,6 +26,7 @@ V.startExpressServer({
     app,
     crossDomain:true
 });
+
 let port = parseInt(process.argv[2]);
 if(port !== port || port <= 0){
     port = HTTP_PORT;
