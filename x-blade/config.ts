@@ -1,6 +1,7 @@
 import {XOrmConfig} from 'x-orm';
+import * as uuid from 'uuid';
 
-export const HTTP_PORT = 9016;
+export const HTTP_PORT = 9050;
 export const DATABASE : XOrmConfig = {
     type: 'mysql',
     name: "default",
@@ -12,3 +13,8 @@ export const DATABASE : XOrmConfig = {
     tablesPrefix: '',
     // debug?: boolean
 }
+
+
+export const SERVER_ID = process.pid + uuid.v1();
+
+export const WORKER_LENGTH = 4;

@@ -1,10 +1,16 @@
 // var Redis = require('ioredis');
 import * as Redis from 'ioredis';
 import * as Redlock from "redlock";
+import { userService } from './user_manager';
+import { SERVER_ID } from '../config';
+import { gameManagerService, IRoomInfo } from './game_manager';
+import { QGameBase } from '../logic/game_base';
+import * as WebSocket from 'ws';
+import { GameGateController } from '../ctrl/gate';
 
 export class RedisService {
-    private redis: Redis.Redis;
-    private lock: Redlock;
+    public redis: Redis.Redis;
+    public lock: Redlock;
     public sub: Redis.Redis;
     public pub: Redis.Redis;
 
@@ -44,10 +50,45 @@ export class RedisService {
             }
         );
 
-        this.sub.on("message", (...args: any[]) => {
+        this.sub.on("message",async (event :string,data) => {
+            //分布式调用
+            if(/^game_controller/.test(event)){
+                try{
+                    let d = JSON.parse(data);
+                    //存储uid
+                    userService.setUserInServer(d.uid,d.SERVER_ID);
+                    //调用
+                    let {roomId,func,args} = d;
+                    let ctrl : QGameBase;
+                    if(ctrl = gameManagerService.hasGame(roomId)){
+                        await (ctrl as any)[func].apply(ctrl,args);
+                    }
+
+                }
+                catch(e){
+
+                }
+            }
+            //消息推送
+            else if(/^push_client/.test(event)){
+                console.log("get push client")
+                try{
+                    let d = JSON.parse(data);
+                    if(!d.uid){
+                        return;
+                    }
+                    GameGateController.sendMessageToClient(d.uid,d.data);
+                }
+                catch(e){
+
+                } 
+            }
+
             console.log("123312");
-            console.log(args);
+            // console.log(args);
         });
+
+        this.sub.subscribe('push_client:' + SERVER_ID);
 
 
         try {

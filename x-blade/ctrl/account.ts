@@ -7,6 +7,7 @@ import * as uuid from 'uuid';
 import { redisService } from '../service/redis';
 import { rand } from 'locutus/php/math';
 import { gameManagerService, IRoomInfo } from '../service/game_manager';
+import { SERVER_ID } from '../config';
 
 @V.Controller({
     type: Connection.HTTP,
@@ -15,6 +16,10 @@ import { gameManagerService, IRoomInfo } from '../service/game_manager';
 })
 export class AccountController {
 
+
+    test(){
+        console.log("access server " + SERVER_ID)
+    }
     /**
      * 微信登录
      * @param unionid 
@@ -123,10 +128,10 @@ export class AccountController {
             await redisService.set("room:" + roomId,roomInfo);
 
             //注册监听器
-            redisService.sub.subscribe("room:" + roomId);
+            // redisService.sub.subscribe("room:" + roomId);
 
-            //启动游戏逻辑
-            gameManagerService.addNewGame(gameConfig.gameType,roomInfo);
+            // //启动游戏逻辑
+            // gameManagerService.addNewGame(gameConfig.gameType,roomInfo);
 
 
             return success(roomInfo);

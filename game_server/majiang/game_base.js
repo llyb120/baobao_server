@@ -1,11 +1,13 @@
 const db = require("../../common/db");
+const QGameBase = require("../../build/logic/game_base").QGameBase;
 
-class GameBase {
+class GameBase extends QGameBase{
 
     set game(val) {
         this._game = val;
     }
     constructor(roomInfo) {
+        super();
         this._roomId = roomInfo.roomId;
         this._roomInfo = roomInfo;
         this._state = 'free';
@@ -28,13 +30,13 @@ class GameBase {
             record: [],
         };
 
-        this.data = {
-            ready: [],
-            roomId: -1,
-            players: []
-        };
-        this.redisService = null;
-        this.userService = null;
+        // this.data = {
+        //     ready: [],
+        //     roomId: -1,
+        //     players: []
+        // };
+        // this.redisService = null;
+        // this.userService = null;
 
         // this._game = global.Games.rooms[roomInfo.roomId];
         // this.reset();
@@ -59,102 +61,102 @@ class GameBase {
     //     }
     // }
 
-    sendToRoom(action, data = null) {
-        // let players = this.data.players;
+    // sendToRoom(action, data = null) {
+    //     // let players = this.data.players;
 
-        // let roomInfo = await this.redisService.get("room:" + this.get("roomId"));
-        // if (roomInfo) {
-        //     return;
-        // }
-        for (const uid of this.data.players) {
-            this.sendToUser(uid, action, data);
-        }
-        // try{
-        //     // let msg = JSON.stringify({
-        //     //     event : action,
-        //     //     data
-        //     // });
-        //     // roomInfo.players.
-        // }
-        // catch(e){
+    //     // let roomInfo = await this.redisService.get("room:" + this.get("roomId"));
+    //     // if (roomInfo) {
+    //     //     return;
+    //     // }
+    //     for (const uid of this.data.players) {
+    //         this.sendToUser(uid, action, data);
+    //     }
+    //     // try{
+    //     //     // let msg = JSON.stringify({
+    //     //     //     event : action,
+    //     //     //     data
+    //     //     // });
+    //     //     // roomInfo.players.
+    //     // }
+    //     // catch(e){
 
-        // }
-        //var io = global.IO;
-        // if(!this._game){
-        //     return;
-        // }
-        // for(var i = 0; i < this._game.players.length; i++){
-        //     var socket = this._game.sockets[i];
-        //     if(!socket){
-        //         continue;
-        //     }
-        //     try{
-        //         socket.send(JSON.stringify({
-        //             event: action,
-        //             data: data
-        //         }));
-        //     }
-        //     catch(e){
+    //     // }
+    //     //var io = global.IO;
+    //     // if(!this._game){
+    //     //     return;
+    //     // }
+    //     // for(var i = 0; i < this._game.players.length; i++){
+    //     //     var socket = this._game.sockets[i];
+    //     //     if(!socket){
+    //     //         continue;
+    //     //     }
+    //     //     try{
+    //     //         socket.send(JSON.stringify({
+    //     //             event: action,
+    //     //             data: data
+    //     //         }));
+    //     //     }
+    //     //     catch(e){
 
-        //     }
+    //     //     }
 
 
-        //     // if(io.sockets.sockets[socketId]){
-        //     //     io.sockets.sockets[socketId].send({
-        //     //         event: action,
-        //     //         data: data
-        //     //     });
-        //     // }
+    //     //     // if(io.sockets.sockets[socketId]){
+    //     //     //     io.sockets.sockets[socketId].send({
+    //     //     //         event: action,
+    //     //     //         data: data
+    //     //     //     });
+    //     //     // }
 
-        //     // io.sockets.sockets[socketId].emit("fuck cocos",1);
-        // }
-    }
+    //     //     // io.sockets.sockets[socketId].emit("fuck cocos",1);
+    //     // }
+    // }
 
-    sendToChair(chairId, action, data = null) {
-        let uid = this.data.players[chairId];
-        if(uid){
-            return;
-        }
-        return this.sendToUser(uid,action,data);
+    // sendToChair(chairId, action, data = null) {
+    //     let uid = this.data.players[chairId];
+    //     if(uid){
+    //         return;
+    //     }
+    //     return this.sendToUser(uid,action,data);
 
-        //var io = global.IO;
-        // if (!this._game) {
-        //     return;
-        // }
-        // var socket = this._game.sockets[chairId];
-        // if (!socket) {
-        //     return;
-        // }
-        // try {
-        //     socket.send(JSON.stringify({
-        //         event: action,
-        //         data: data
-        //     }));
-        // } catch (e) {
+    //     //var io = global.IO;
+    //     // if (!this._game) {
+    //     //     return;
+    //     // }
+    //     // var socket = this._game.sockets[chairId];
+    //     // if (!socket) {
+    //     //     return;
+    //     // }
+    //     // try {
+    //     //     socket.send(JSON.stringify({
+    //     //         event: action,
+    //     //         data: data
+    //     //     }));
+    //     // } catch (e) {
 
-        // }
-        // var socketId = this._game.sockets[chairId];
-        // if(io.sockets.sockets[socketId]){
-        //     io.sockets.sockets[socketId].send({
-        //         event: action,
-        //         data: data
-        //     });
-        //     // io.sockets.sockets[socketId].emit("fuck cocos","fuck cocos");
-        // }
+    //     // }
+    //     // var socketId = this._game.sockets[chairId];
+    //     // if(io.sockets.sockets[socketId]){
+    //     //     io.sockets.sockets[socketId].send({
+    //     //         event: action,
+    //     //         data: data
+    //     //     });
+    //     //     // io.sockets.sockets[socketId].emit("fuck cocos","fuck cocos");
+    //     // }
 
-    }
+    // }
 
-    sendToUser(uid, event, data = null) {
-        try{
-            let sendData = JSON.stringify({
-                event,data
-            });
+    // sendToUser(uid, event, data = null) {
+    //     try{
+    //         let sendData = JSON.stringify({
+    //             event,data
+    //         });
             
 
-        }catch(e){
+    //     }catch(e){
 
-        }
-    }
+    //     }
+    // }
 
 
     onMessage(chairId, event, data) {

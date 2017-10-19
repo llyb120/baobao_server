@@ -42,7 +42,7 @@ exports.start = async(app) => {
     roomService.start(app, serverService);
 
     // app.listen(config.HALL_SERVER.port);
-    console.log("HALL_SERVER is listening " + config.HALL_SERVER.port);
+    // console.log("HALL_SERVER is listening " + config.HALL_SERVER.port);
 
     return true;
 };

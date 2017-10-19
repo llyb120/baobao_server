@@ -1,5 +1,6 @@
 import { redisService } from './redis';
 import { userService } from './user_manager';
+import { QGameBase } from '../logic/game_base';
 
 let SDGame = require('../../game_server/majiang/henmj_game');
 
@@ -17,11 +18,16 @@ export interface IRoomInfo{
 
 class GameManager{
     private games : {
-        [roomid : number] : any
+        [roomid : number] : QGameBase 
     } = {};
 
-    addNewGame(gameType:string,roomInfo : IRoomInfo){
+    async addNewGame(gameType:string,roomInfo : IRoomInfo){
+        console.log("create new game");
+        // console.log(Object.keys(this.games));
+        // let lock = await redisService.lock.lock("game_controller_lock:" + roomInfo.roomId,1000);
+        // await redisService.setWithLock("game_controller_lock:" + roomInfo.roomId,"yes");
         let controller;
+
         switch(gameType){
             case 'henanmajiang':
                 controller = new SDGame(roomInfo);
@@ -35,12 +41,13 @@ class GameManager{
             roomInfo : roomInfo
         }
         controller.data.roomId = roomInfo.roomId;
-
+// console.log(123);
         this.games[roomInfo.roomId] = controller;
         this.games[roomInfo.roomId].redisService = redisService;
-        controller.userService = userService;
+        this.games[roomInfo.roomId].userService = userService;
 
-        redisService.sub.subscribe("game_controller:" + roomInfo.roomId);
+        await redisService.sub.subscribe("game_controller:" + roomInfo.roomId);
+        // await redisService.lock.unlock(lock);
     }
 
     hasGame(roomId : number){

@@ -5,6 +5,7 @@ import * as WebSocket from 'ws';
 import { X } from 'x-orm';
 import { redisService } from '../service/redis';
 import { userService } from '../service/user_manager';
+import { SERVER_ID } from '../config';
 
 let SocketMap = new WeakMap<WebSocket, number>();
 
@@ -14,13 +15,25 @@ let SocketMap = new WeakMap<WebSocket, number>();
 })
 export class GameGateController {
     onConnect() {
+        // console.log("connected on server " + SERVER_ID);
     }
 
     onClose(ws: WebSocket) {
-        SocketMap.delete(ws);
+        if (SocketMap.has(ws)) {
+            let uid = SocketMap.get(ws);
+            userService.deleteUserInServer(uid);
+            userService.deleteUserClient(uid);
+            SocketMap.delete(ws);
+        }
+
     }
     onError(ws: WebSocket) {
-        SocketMap.delete(ws);
+        if (SocketMap.has(ws)) {
+            let uid = SocketMap.get(ws);
+            userService.deleteUserInServer(uid);
+            userService.deleteUserClient(uid);
+            SocketMap.delete(ws);
+        }
     }
 
     async onMessage(ws: WebSocket, message) {
@@ -47,69 +60,114 @@ export class GameGateController {
                     return;
                 }
                 SocketMap.set(ws, user.id);
-                userService.setUser(user.id,user);
+                //该用户在当前服务器上
+                userService.setUser(user.id, user);
+                userService.setUserInServer(user.id, SERVER_ID);
+                userService.setUserClient(user.id, ws);
             }
             else {
                 return;
             }
 
-            switch (data.event) {
-                case 'register_token_pull':
-                    return;
-
-                //还没有绑定任何逻辑控制器的时候，处理用户的注册事件
-                case 'enter_room_pull':
-                    //查找当前用户所在位置
-
-                    let roomId = await redisService.get("user_in_room:" + user.id);
-                    if (!roomId) {
-                        return;
-                    }
-
-                    // let {roomId} = data;
-                    return await this.rpcCall(roomId, 'onUserEnter', [user.id]);
-                    // break;
-
-                //事件分发
-                default:
-                    // if(gameManagerService.hasGame())
-                    break;
+            //消息转发
+            let roomId = await redisService.get("user_in_room:" + user.id);
+            if (!roomId) {
+                return;
             }
+            GameGateController.rpcCall(user.id, roomId, 'onRpcCall', [user.id, data.event, _data]);
+
+            // switch (data.event) {
+            //     case 'register_token_pull':
+            //         return;
+
+            //     //还没有绑定任何逻辑控制器的时候，处理用户的注册事件
+            //     case 'enter_room_pull':
+            //         //查找当前用户所在位置
+
+            //         let roomId = await redisService.get("user_in_room:" + user.id);
+            //         if (!roomId) {
+            //             return;
+            //         }
+
+            //         // let {roomId} = data;
+            //         return await this.rpcCall(user.id, roomId, 'onUserEnter', [user.id]);
+            //     // break;
+
+            //     //事件分发
+            //     default:
+            //         // if(gameManagerService.hasGame())
+            //         break;
+            // }
 
             // return this.rpcCall(roomId,)
         }
         catch (e) {
-
+            // console.log(e);
         }
-        console.log(message);
     }
 
     /**
          * 分布式调用
          * @param roomId 
          */
-    async rpcCall(roomId: number, method: string, args: any) {
-        console.log("rpc call");
+    static async rpcCall(uid: number, roomId: number, method: string, args: any) {
         //如果在本机，则直接调用
         let game;
         if (game = gameManagerService.hasGame(roomId)) {
-            console.log("in self");
-            await game[roomId][method].apply(game[roomId], args);
+            await game[method].apply(game, args);
         }
         else {
-            let option = {};
-            let count = await redisService.pub.publish("game_controller:" + roomId, JSON.stringify(option));
+            let option = {
+                uid,
+                SERVER_ID,
+                roomId,
+                func: method,
+                args: args
+            };
+            let pushKey = "game_controller:" + roomId,
+                pushData = JSON.stringify(option);
+            let count = await redisService.pub.publish(pushKey, pushData);
             //如果没有任何节点接受这个事件，那么自行创建该游戏
             if (count === 0) {
                 let roomInfo: IRoomInfo = await redisService.get("room:" + roomId);
                 if (roomInfo) {
-                    gameManagerService.addNewGame(roomInfo.gameType, roomInfo);
-                    game = gameManagerService.hasGame(roomId);
-                    await game[roomId][method].apply(game[roomId], args);
+                    let key = "game_controlrer_in_server:" + roomId;
+                    //争抢线程，最终只有一个可以成功
+                    redisService.redis.watch(key);
+                    redisService.redis.multi().set(key, SERVER_ID).exec(async (err, result) => {
+                        let server = await redisService.get(key);
+                        if (server === SERVER_ID) {
+                            await gameManagerService.addNewGame(roomInfo.gameType, roomInfo);
+                            game = gameManagerService.hasGame(roomId);
+                            await game[method].apply(game, args);
+                            await redisService.redis.del(key);
+                        }
+                        else {
+                            //延迟150毫秒再发送广播
+                            setTimeout(async () => {
+                                await redisService.pub.publish(pushKey,pushData);
+                            }, 150);
+                        }
+                    });
                 }
             }
         }
 
+    }
+
+
+    static sendMessageToClient(uid: number, data: string) {
+        let ws: WebSocket;
+        if (ws = userService.getUserClient(uid)) {
+            if (ws.readyState == WebSocket.OPEN) {
+                ws.send(data);
+            }
+            else {
+                //用户不存在的时候，清空用户
+                userService.deleteUserClient(uid);
+                userService.deleteUserInServer(uid);
+            }
+        };
     }
 
 }
