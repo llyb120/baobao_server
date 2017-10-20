@@ -1,6 +1,6 @@
 FROM hub.c.163.com/public/nodejs:8.1.2
 
-RUN add-apt-repository ppa:git-core/ppa
+RUN apt-get update && apt-get install -y git
 
 RUN mkdir -p /usr/src/node
 WORKDIR /usr/src/node
