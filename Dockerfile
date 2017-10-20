@@ -6,8 +6,7 @@ RUN mkdir -p /usr/src/node
 WORKDIR /usr/src/node
 COPY . /usr/src/node
 RUN npm install
-RUN npm install -g typescript 
 RUN npm install -g pm2
-RUN tsc
+
 EXPOSE 9016
 ENTRYPOINT ["pm2","start","build/app.js","game_server/majiang/app.js"]
